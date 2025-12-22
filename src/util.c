@@ -1,7 +1,5 @@
 #include <xmllib.h>
 
-#include "../external/stb_ds.h"
-
 char* xl_util_trim(const char* str) {
 	char* s	 = malloc(strlen(str) + 1);
 	int   nl = 1;
@@ -47,13 +45,13 @@ char* xl_util_trim(const char* str) {
 
 		if(cp == 0) break;
 
-		arrput(l, new);
+		xl_array_push(&l, new);
 
 		i += new;
 	}
 
 	i   = strlen(s);
-	inc = arrlen(l) - 1;
+	inc = xl_array_length(&l) - 1;
 	if(inc > 0) {
 		while(1) {
 			int cp, new;
@@ -72,7 +70,7 @@ char* xl_util_trim(const char* str) {
 		}
 	}
 
-	arrfree(l);
+	xl_array_free(&l);
 
 	return s;
 }

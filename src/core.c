@@ -1,7 +1,5 @@
 #include <xmllib.h>
 
-#include "../external/stb_ds.h"
-
 xmllib_t* xl_open(xl_driver_t* driver, void* arg) {
 	xmllib_t* handle = malloc(sizeof(*handle));
 	memset(handle, 0, sizeof(*handle));
@@ -45,7 +43,7 @@ enum STATES {
 #define CLEANUP \
 	{ \
 		if(node != NULL) free(node); \
-		arrfree(state); \
+		xl_array_free(&state); \
 	}
 
 #define ERROR \
@@ -55,7 +53,7 @@ enum STATES {
 		longjmp(err, 1); \
 	}
 
-#define STATE state[arrlen(state) - 1]
+#define STATE state[xl_array_length(&state) - 1]
 
 static xl_attribute_t* xl_parse_attribute(const char* str) {
 	xl_attribute_t* first	= NULL;
@@ -146,7 +144,7 @@ int xl_parse(xmllib_t* handle) {
 		return 0;
 	}
 
-	arrput(state, STATE_INITIAL);
+	xl_array_push(&state, STATE_INITIAL);
 
 	while(1) {
 		char in[4];
@@ -162,7 +160,7 @@ int xl_parse(xmllib_t* handle) {
 
 		if(cp == '<' && STATE != STATE_COMMENT) {
 			if(STATE == STATE_INITIAL) {
-				arrput(state, STATE_TAG);
+				xl_array_push(&state, STATE_TAG);
 
 				node	   = malloc(1);
 				node[0]	   = 0;
@@ -170,14 +168,14 @@ int xl_parse(xmllib_t* handle) {
 			} else if(STATE == STATE_STRING) {
 				TAKE_AS_NODE(cp);
 			} else if(STATE == STATE_MISC) {
-				arrput(state, STATE_IGNORE_TAG);
+				xl_array_push(&state, STATE_IGNORE_TAG);
 			} else {
 				ERROR;
 			}
 		} else if(cp == '>') {
 			if(STATE == STATE_TAG || STATE == STATE_COMMENT || STATE == STATE_MISC || STATE == STATE_IGNORE_TAG) {
 				if((STATE != STATE_COMMENT || node[strlen(node) - 1] == '-')) {
-					arrpop(state);
+					xl_array_pop(&state);
 
 					if(STATE == STATE_INITIAL) {
 						/* parsed tag */
@@ -348,21 +346,21 @@ int xl_parse(xmllib_t* handle) {
 			}
 		} else if(cp == '"' && STATE != STATE_COMMENT && STATE != STATE_MISC) {
 			if(STATE == STATE_TAG) {
-				arrput(state, STATE_STRING);
+				xl_array_push(&state, STATE_STRING);
 			} else if(STATE == STATE_STRING) {
-				arrpop(state);
+				xl_array_pop(&state);
 			}
 			TAKE_AS_NODE(cp);
 		} else if(STATE == STATE_TAG || STATE == STATE_STRING || STATE == STATE_SPECIAL || STATE == STATE_COMMENT || STATE == STATE_MISC || STATE == STATE_IGNORE_TAG) {
 			if(node_count == 0 && cp == '!') {
-				arrpop(state);
-				arrput(state, STATE_SPECIAL);
+				xl_array_pop(&state);
+				xl_array_push(&state, STATE_SPECIAL);
 			} else if(node_count == 1 && STATE == STATE_SPECIAL && cp == '-') {
-				arrpop(state);
-				arrput(state, STATE_COMMENT);
+				xl_array_pop(&state);
+				xl_array_push(&state, STATE_COMMENT);
 			} else if(node_count == 1 && STATE == STATE_SPECIAL) {
-				arrpop(state);
-				arrput(state, STATE_MISC);
+				xl_array_pop(&state);
+				xl_array_push(&state, STATE_MISC);
 			}
 			TAKE_AS_NODE(cp);
 		} else if(STATE == STATE_INITIAL) {

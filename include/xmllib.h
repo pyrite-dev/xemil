@@ -83,6 +83,15 @@ XLDECL int xl_unicode_8_to_32(const char* input, int* output);
 
 XLDECL int xl_unicode_32_to_8(const int input, char* output);
 
+/* array.c */
+XLDECL void xl_array_push(int** array, int value);
+
+XLDECL int xl_array_length(int** array);
+
+XLDECL void xl_array_pop(int** array);
+
+XLDECL void xl_array_free(int** array);
+
 #ifdef __cplusplus
 }
 #endif
