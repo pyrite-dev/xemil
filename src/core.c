@@ -30,13 +30,15 @@ enum STATES {
 	{ \
 		char* old = node; \
 		char  buf[4]; \
-		int new = xmllib_unicode_32_to_8((x), buf); \
+		int new = xmllib_unicode_32_to_8((x), &buf[0]); \
 \
 		node = malloc(strlen(old) + new + 1); \
 		strcpy(node, old); \
-		memcpy(node + strlen(old), buf, new); \
+		memcpy(node + strlen(old), &buf[0], new); \
 		node[strlen(old) + new] = 0; \
 		node_count++; \
+\
+		free(old); \
 	}
 
 #define CLEANUP \
@@ -51,6 +53,8 @@ enum STATES {
 		CLEANUP; \
 		longjmp(err, 1); \
 	}
+
+#define SKIPPABLE(x) (((x) == ' ') || ((x) == '\t') || ((x) == '\n') || ((x) == '\r'))
 
 #define STATE state[arrlen(state) - 1]
 
@@ -107,7 +111,7 @@ int xmllib_parse(xmllib_t* handle) {
 							if(strlen(node) > 1 && node[1] == '-') {
 								/* comment */
 
-								if(strlen(node) > (3 + 2)) {
+								if(strlen(node) > (3 + 2) && nest_level > 0) {
 									n = malloc(sizeof(*n));
 
 									n->type = XMLLIB_NODE_COMMENT;
@@ -130,7 +134,46 @@ int xmllib_parse(xmllib_t* handle) {
 								if(nest_level > 0) {
 									if(strcmp(current->name, node + 1) != 0) ERROR;
 
-									current = current->parent;
+									if(current->text != NULL) {
+										int   i, inc;
+										int*  l	  = NULL;
+										char* txt = current->text;
+
+										i = 0;
+										while(1) {
+											int icp;
+											int nb = xmllib_unicode_8_to_32(txt + i, &icp);
+
+											if(icp == 0) break;
+
+											arrput(l, nb);
+
+											i += nb;
+										}
+
+										inc = strlen(txt);
+										i   = arrlen(l) - 1;
+										while(1) {
+											int icp;
+											int nb;
+
+											inc -= l[i];
+
+											nb = xmllib_unicode_8_to_32(txt + inc, &icp);
+
+											if(SKIPPABLE(icp)) {
+												txt[inc] = 0;
+											} else {
+												break;
+											}
+
+											i--;
+										}
+
+										arrfree(l);
+									}
+
+									targ = current->parent;
 								}
 
 								nest_level--;
@@ -139,8 +182,6 @@ int xmllib_parse(xmllib_t* handle) {
 
 								n = malloc(sizeof(*n));
 
-								if(handle->root == NULL) handle->root = n;
-
 								n->type = XMLLIB_NODE_NODE;
 								n->name = malloc(strlen(node) + 1);
 								n->text = NULL;
@@ -148,21 +189,18 @@ int xmllib_parse(xmllib_t* handle) {
 								strcpy(n->name, node);
 								i = 0;
 								while(1) {
-									int cp;
-									int nb = xmllib_unicode_8_to_32(n->name + i, &cp);
+									int icp;
+									int nb = xmllib_unicode_8_to_32(n->name + i, &icp);
 
-									if(cp == 0) break;
+									if(icp == 0) break;
 
-									if(cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r') {
+									if(SKIPPABLE(icp)) {
 										n->name[i] = 0;
 										break;
 									}
 
 									i += nb;
 								}
-
-								n->root	  = handle->root;
-								n->parent = current;
 
 								if(node[strlen(node) - 1] != '/') {
 									/* non self-closing tag */
@@ -177,6 +215,11 @@ int xmllib_parse(xmllib_t* handle) {
 
 						if(n != NULL) {
 							xmllib_node_t* last = NULL;
+
+							if(handle->root == NULL) handle->root = n;
+
+							n->root	  = handle->root;
+							n->parent = current;
 
 							n->first_child = NULL;
 
@@ -230,6 +273,27 @@ int xmllib_parse(xmllib_t* handle) {
 			}
 			TAKE_AS_NODE(cp);
 		} else if(STATE == STATE_INITIAL) {
+			if(current != NULL) {
+				char* old = current->text;
+				if(old != NULL) {
+					char buf[4];
+					int new = xmllib_unicode_32_to_8(cp, &buf[0]);
+
+					current->text = malloc(strlen(old) + new + 1);
+					strcpy(current->text, old);
+					memcpy(current->text + strlen(old), &buf[0], new);
+					current->text[strlen(old) + new] = 0;
+
+					free(old);
+				} else if(!SKIPPABLE(cp)) {
+					char buf[4];
+					int new = xmllib_unicode_32_to_8(cp, &buf[0]);
+
+					current->text = malloc(new + 1);
+					memcpy(current->text, &buf[0], new);
+					current->text[new] = 0;
+				}
+			}
 		} else {
 			ERROR;
 		}
@@ -240,7 +304,22 @@ int xmllib_parse(xmllib_t* handle) {
 	return 1;
 }
 
+void recursive_free(xmllib_node_t* node) {
+	xmllib_node_t* n = node->first_child;
+	while(n != NULL) {
+		recursive_free(n);
+
+		n = n->next;
+	}
+
+	if(node->name != NULL) free(node->name);
+	if(node->text != NULL) free(node->text);
+	free(node);
+}
+
 void xmllib_close(xmllib_t* handle) {
+	recursive_free(handle->root);
+
 	handle->driver->close(handle);
 	free(handle);
 }

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I include -fPIC
+CFLAGS = -I include -fPIC -g
 LDFLAGS = -shared
 LIBS =
 
@@ -25,4 +25,4 @@ libxmllib$(SO): $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f src/*.o *.so *.dll
+	rm -f src/*.o *.so *.dll example
