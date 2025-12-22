@@ -2,7 +2,7 @@
 
 #define CAST_I32(x) ((int)(x))
 
-int xmllib_unicode_count(unsigned char c) {
+int xl_unicode_count(unsigned char c) {
 	if(c < 0x80) {
 		return 1;
 	}
@@ -22,9 +22,9 @@ static int unicode_later(unsigned char c) {
 	return 0x80 <= c && c < 0xc0;
 }
 
-int xmllib_unicode_8_to_32(const char* input, int* output) {
+int xl_unicode_8_to_32(const char* input, int* output) {
 	const unsigned char* inbuf = (const unsigned char*)input;
-	int		     b	   = xmllib_unicode_count(inbuf[0]);
+	int		     b	   = xl_unicode_count(inbuf[0]);
 	if(b == 0) return 0;
 
 	if(b == 1) *output = inbuf[0];
@@ -56,7 +56,7 @@ int xmllib_unicode_8_to_32(const char* input, int* output) {
 	return b;
 }
 
-int xmllib_unicode_32_to_8(const int input, char* output) {
+int xl_unicode_32_to_8(const int input, char* output) {
 	if(input < 128) {
 		output[0] = input;
 		return 1;
