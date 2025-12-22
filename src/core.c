@@ -99,11 +99,24 @@ int xmllib_parse(xmllib_t* handle) {
 
 					if(STATE == STATE_INITIAL) {
 						/* parsed tag */
+						xmllib_node_t* n    = NULL;
+						xmllib_node_t* targ = NULL;
 
 						if(node[0] == '!') {
 							/* special tag */
 							if(strlen(node) > 1 && node[1] == '-') {
 								/* comment */
+
+								if(strlen(node) > (3 + 2)) {
+									n = malloc(sizeof(*n));
+
+									n->type = XMLLIB_NODE_COMMENT;
+									n->name = NULL;
+									n->text = malloc(strlen(node) + 1);
+
+									strcpy(n->text, node + 3);
+									n->text[strlen(n->text) - 2] = 0;
+								}
 							} else {
 								/* doctype or something - we ignore this for now */
 							}
@@ -122,9 +135,9 @@ int xmllib_parse(xmllib_t* handle) {
 
 								nest_level--;
 							} else {
-								xmllib_node_t* n    = malloc(sizeof(*n));
-								xmllib_node_t* last = NULL;
-								int	       i;
+								int i;
+
+								n = malloc(sizeof(*n));
 
 								if(handle->root == NULL) handle->root = n;
 
@@ -151,30 +164,9 @@ int xmllib_parse(xmllib_t* handle) {
 								n->root	  = handle->root;
 								n->parent = current;
 
-								n->first_child = NULL;
-
-								if(current != NULL && current->first_child != NULL) {
-									last = current->first_child;
-									while(last->next != NULL) last = last->next;
-								}
-
-								n->prev = last;
-								n->next = NULL;
-
-								if(n->prev != NULL) {
-									n->prev->next = n;
-								}
-
-								current = n;
-
-								if(current->parent != NULL && current->parent->first_child == NULL) {
-									current->parent->first_child = n;
-								}
-
-								if(node[strlen(node) - 1] == '/') {
-									/* self-closing tag */
-									current = current->parent;
-								} else {
+								if(node[strlen(node) - 1] != '/') {
+									/* non self-closing tag */
+									targ = n;
 									nest_level++;
 								}
 							}
@@ -182,6 +174,30 @@ int xmllib_parse(xmllib_t* handle) {
 							if(nest_level < 0) ERROR;
 							if(nest_level == 0) break;
 						}
+
+						if(n != NULL) {
+							xmllib_node_t* last = NULL;
+
+							n->first_child = NULL;
+
+							if(current != NULL && current->first_child != NULL) {
+								last = current->first_child;
+								while(last->next != NULL) last = last->next;
+							}
+
+							n->prev = last;
+							n->next = NULL;
+
+							if(n->prev != NULL) {
+								n->prev->next = n;
+							}
+
+							if(current != NULL && current->first_child == NULL) {
+								current->first_child = n;
+							}
+						}
+
+						if(targ != NULL) current = targ;
 
 						free(node);
 						node = NULL;

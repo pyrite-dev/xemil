@@ -13,7 +13,7 @@ SO = .so
 all: libxmllib$(SO)
 
 format:
-	clang-format --verbose -i `find src include -name "*.c" -or -name "*.h"`
+	clang-format --verbose -i `find src include -name "*.c" -or -name "*.h"` example.c
 
 example: example.c libxmllib$(SO)
 	$(CC) -o $@ example.c -I include -Wl,-R. -L. -lxmllib
