@@ -55,11 +55,12 @@ enum STATES {
 #define STATE state[arrlen(state) - 1]
 
 int xmllib_parse(xmllib_t* handle) {
-	jmp_buf err;
-	int*	state	   = NULL;
-	char*	node	   = NULL;
-	int	node_count = 0;
-	int	nest_level = 0;
+	jmp_buf	       err;
+	int*	       state	  = NULL;
+	char*	       node	  = NULL;
+	int	       node_count = 0;
+	int	       nest_level = 0;
+	xmllib_node_t* current	  = NULL;
 
 	if(setjmp(err)) {
 		return 0;
@@ -113,11 +114,69 @@ int xmllib_parse(xmllib_t* handle) {
 							if(node[0] == '/') {
 								/* close tag */
 
-								nest_level--;
-							} else if(node[strlen(node) - 1] == '/') {
-								/* self-closing tag */
+								if(nest_level > 0) {
+									if(strcmp(current->name, node + 1) != 0) ERROR;
 
-								nest_level++;
+									current = current->parent;
+								}
+
+								nest_level--;
+							} else {
+								xmllib_node_t* n    = malloc(sizeof(*n));
+								xmllib_node_t* last = NULL;
+								int	       i;
+
+								if(handle->root == NULL) handle->root = n;
+
+								n->type = XMLLIB_NODE_NODE;
+								n->name = malloc(strlen(node) + 1);
+								n->text = NULL;
+
+								strcpy(n->name, node);
+								i = 0;
+								while(1) {
+									int cp;
+									int nb = xmllib_unicode_8_to_32(n->name + i, &cp);
+
+									if(cp == 0) break;
+
+									if(cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r') {
+										n->name[i] = 0;
+										break;
+									}
+
+									i += nb;
+								}
+
+								n->root	  = handle->root;
+								n->parent = current;
+
+								n->first_child = NULL;
+
+								if(current != NULL && current->first_child != NULL) {
+									last = current->first_child;
+									while(last->next != NULL) last = last->next;
+								}
+
+								n->prev = last;
+								n->next = NULL;
+
+								if(n->prev != NULL) {
+									n->prev->next = n;
+								}
+
+								current = n;
+
+								if(current->parent != NULL && current->parent->first_child == NULL) {
+									current->parent->first_child = n;
+								}
+
+								if(node[strlen(node) - 1] == '/') {
+									/* self-closing tag */
+									current = current->parent;
+								} else {
+									nest_level++;
+								}
 							}
 
 							if(nest_level < 0) ERROR;
@@ -154,6 +213,9 @@ int xmllib_parse(xmllib_t* handle) {
 				arrput(state, STATE_DOCTYPE);
 			}
 			TAKE_AS_NODE(cp);
+		} else if(STATE == STATE_INITIAL) {
+		} else {
+			ERROR;
 		}
 	}
 
