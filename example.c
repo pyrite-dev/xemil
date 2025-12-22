@@ -1,4 +1,4 @@
-#include <xmllib.h>
+#include <xemil.h>
 
 #define INDENT 2
 
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	int i;
 
 	for(i = 1; i < argc; i++) {
-		xmllib_t* h = xl_open_file(argv[i]);
+		xemil_t* h = xl_open_file(argv[i]);
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {

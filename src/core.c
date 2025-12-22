@@ -1,7 +1,7 @@
-#include <xmllib.h>
+#include <xemil.h>
 
-xmllib_t* xl_open(xl_driver_t* driver, void* arg) {
-	xmllib_t* handle = malloc(sizeof(*handle));
+xemil_t* xl_open(xl_driver_t* driver, void* arg) {
+	xemil_t* handle = malloc(sizeof(*handle));
 	memset(handle, 0, sizeof(*handle));
 
 	handle->driver	= driver;
@@ -132,7 +132,7 @@ static xl_attribute_t* xl_parse_attribute(const char* str) {
 	return first;
 }
 
-int xl_parse(xmllib_t* handle) {
+int xl_parse(xemil_t* handle) {
 	jmp_buf	   err;
 	int*	   state      = NULL;
 	char*	   node	      = NULL;
@@ -416,7 +416,7 @@ void recursive_free(xl_node_t* node) {
 	free(node);
 }
 
-void xl_close(xmllib_t* handle) {
+void xl_close(xemil_t* handle) {
 	if(handle->root != NULL) recursive_free(handle->root);
 
 	handle->driver->close(handle);

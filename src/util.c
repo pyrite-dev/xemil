@@ -1,4 +1,4 @@
-#include <xmllib.h>
+#include <xemil.h>
 
 char* xl_util_trim(const char* str) {
 	char* s	 = malloc(strlen(str) + 1);

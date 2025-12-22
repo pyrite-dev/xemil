@@ -1,5 +1,5 @@
-#ifndef __XMLLIB_H__
-#define __XMLLIB_H__
+#ifndef __XEMIL_H__
+#define __XEMIL_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,16 +9,16 @@
 #define XLDECL extern
 
 typedef struct xl_driver    xl_driver_t;
-typedef struct xmllib	    xmllib_t;
+typedef struct xemil	    xemil_t;
 typedef struct xl_node	    xl_node_t;
 typedef struct xl_attribute xl_attribute_t;
 
 #define XL_SKIPPABLE(x) (((x) == ' ') || ((x) == '\t') || ((x) == '\n') || ((x) == '\r'))
 
 struct xl_driver {
-	int (*open)(xmllib_t* handle);
-	int (*read)(xmllib_t* handle, void* data, int size);
-	void (*close)(xmllib_t* handle);
+	int (*open)(xemil_t* handle);
+	int (*read)(xemil_t* handle, void* data, int size);
+	void (*close)(xemil_t* handle);
 };
 
 enum XL_NODE_TYPE {
@@ -50,7 +50,7 @@ struct xl_node {
 	xl_node_t* next;
 };
 
-struct xmllib {
+struct xemil {
 	xl_driver_t* driver;
 	void*	     drv_opaque;
 	void*	     drv_arg;
@@ -62,16 +62,16 @@ extern "C" {
 #endif
 
 /* core.c */
-XLDECL xmllib_t* xl_open(xl_driver_t* driver, void* arg);
+XLDECL xemil_t* xl_open(xl_driver_t* driver, void* arg);
 
-XLDECL int xl_parse(xmllib_t* handle);
+XLDECL int xl_parse(xemil_t* handle);
 
-XLDECL void xl_close(xmllib_t* handle);
+XLDECL void xl_close(xemil_t* handle);
 
 /* file.c */
 XLDECL xl_driver_t* xl_driver_file;
 
-XLDECL xmllib_t* xl_open_file(const char* filename);
+XLDECL xemil_t* xl_open_file(const char* filename);
 
 /* util.c */
 XLDECL char* xl_util_trim(const char* str);
