@@ -8,9 +8,10 @@
 
 #define XLDECL extern
 
-typedef struct xl_driver xl_driver_t;
-typedef struct xmllib	 xmllib_t;
-typedef struct xl_node	 xl_node_t;
+typedef struct xl_driver    xl_driver_t;
+typedef struct xmllib	    xmllib_t;
+typedef struct xl_node	    xl_node_t;
+typedef struct xl_attribute xl_attribute_t;
 
 #define XL_SKIPPABLE(x) (((x) == ' ') || ((x) == '\t') || ((x) == '\n') || ((x) == '\r'))
 
@@ -23,14 +24,22 @@ struct xl_driver {
 enum XL_NODE_TYPE {
 	XL_NODE_COMMENT = 0,
 	XL_NODE_NODE,
-	XL_NODE_PROCESS,
-	XL_NODE_DOCTYPE
+	XL_NODE_PROCESS
+};
+
+struct xl_attribute {
+	char* key;
+	char* value;
+
+	xl_attribute_t* prev;
+	xl_attribute_t* next;
 };
 
 struct xl_node {
-	int   type;
-	char* name;
-	char* text;
+	int		type;
+	char*		name;
+	char*		text;
+	xl_attribute_t* first_attribute;
 
 	xl_node_t* root;
 	xl_node_t* parent;

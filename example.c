@@ -6,8 +6,22 @@ void recursive(xl_node_t* node, int indent) {
 	int	   i;
 	xl_node_t* n;
 	for(i = 0; i < indent; i++) printf(" ");
-	if(node->name != NULL && node->type == XL_NODE_NODE) {
-		printf("<%s>\n", node->name);
+	if(node->name != NULL && (node->type == XL_NODE_NODE || node->type == XL_NODE_PROCESS)) {
+		xl_attribute_t* a;
+
+		printf("<%s%s", node->type == XL_NODE_PROCESS ? "?" : "", node->name);
+
+		a = node->first_attribute;
+		while(a != NULL) {
+			if(a->value == NULL) {
+				printf(" %s", a->key);
+			} else {
+				printf(" %s=\"%s\"", a->key, a->value);
+			}
+			a = a->next;
+		}
+
+		printf("%s>\n", node->type == XL_NODE_PROCESS ? "?" : "");
 		if(node->text != NULL) {
 			for(i = 0; i < indent + INDENT; i++) printf(" ");
 			printf("%s\n", node->text);

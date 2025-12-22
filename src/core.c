@@ -57,6 +57,83 @@ enum STATES {
 
 #define STATE state[arrlen(state) - 1]
 
+static xl_attribute_t* xl_parse_attribute(const char* str) {
+	xl_attribute_t* first	= NULL;
+	xl_attribute_t* current = NULL;
+	char*		s	= malloc(strlen(str) + 1);
+	int		i;
+	int		st    = 0;
+	int		start = -1;
+	int		dq    = 0;
+
+	strcpy(s, str);
+
+	i = 0;
+	while(1) {
+		int cp;
+		int new = xl_unicode_8_to_32(s + i, &cp);
+
+		if(st == 0 && XL_SKIPPABLE(cp)) {
+		} else if(st == 0) {
+			xl_attribute_t* old = current;
+
+			st    = 1;
+			start = i;
+
+			current = malloc(sizeof(*current));
+
+			current->key   = NULL;
+			current->value = NULL;
+
+			current->prev = NULL;
+			current->next = NULL;
+
+			if(old != NULL) {
+				current->prev = old;
+				old->next     = current;
+			}
+
+			if(first == NULL) first = current;
+		}
+
+		if(st == 1 && (cp == '=' || cp == 0)) {
+			char* b = malloc(i - start + 1);
+			memcpy(b, s + start, i - start);
+			b[i - start] = 0;
+
+			current->key = b;
+
+			st = 2;
+
+			if(cp == '=') {
+				current->value	  = malloc(1);
+				current->value[0] = 0;
+			}
+		} else if(st == 2 && ((dq ? 0 : XL_SKIPPABLE(cp)) || cp == 0)) {
+			st = 0;
+		} else if(st == 2 && cp == '"') {
+			dq = dq ? 0 : 1;
+		} else if(st == 2) {
+			char* old = current->value;
+
+			current->value = malloc(strlen(old) + new + 1);
+			strcpy(current->value, old);
+			memcpy(current->value + strlen(old), s + i, new);
+			current->value[strlen(old) + new] = 0;
+
+			free(old);
+		}
+
+		i += new;
+
+		if(cp == 0) break;
+	}
+
+	free(s);
+
+	return first;
+}
+
 int xl_parse(xmllib_t* handle) {
 	jmp_buf	   err;
 	int*	   state      = NULL;
@@ -115,9 +192,10 @@ int xl_parse(xmllib_t* handle) {
 								if(strlen(node) > (1 + 3 + 2) && nest_level > 0) {
 									n = malloc(sizeof(*n));
 
-									n->type = XL_NODE_COMMENT;
-									n->name = NULL;
-									n->text = malloc(strlen(node) + 1);
+									n->type		   = XL_NODE_COMMENT;
+									n->name		   = NULL;
+									n->text		   = malloc(strlen(node) + 1);
+									n->first_attribute = NULL;
 
 									strcpy(n->text, node + 3);
 									n->text[strlen(n->text) - 2] = 0;
@@ -138,12 +216,12 @@ int xl_parse(xmllib_t* handle) {
 									current->text[strlen(current->text) - 2] = 0;
 								}
 							} else {
-								/* doctype or something - we ignore this for now */
+								/* DOCTYPE or something - ignored for now */
 							}
-						} else if(node[0] == '?') {
-							/* process */
 						} else {
 							/* normal tag */
+							int proc = 0;
+
 							if(node[0] == '/') {
 								/* close tag */
 								char* str;
@@ -164,40 +242,68 @@ int xl_parse(xmllib_t* handle) {
 									free(current->text);
 									current->text = NULL;
 								}
+
+								proc = 1;
 							} else {
-								int i;
+								int   i;
+								int   set = 0;
+								char* s	  = malloc(strlen(node) + 1);
 
 								n = malloc(sizeof(*n));
 
-								n->type = XL_NODE_NODE;
-								n->name = malloc(strlen(node) + 1);
-								n->text = NULL;
+								if(node[0] == '?' && node[strlen(node) - 1] == '?') {
+									n->type = XL_NODE_PROCESS;
 
-								strcpy(n->name, node);
-								i = 0;
-								while(1) {
-									int icp;
-									int nb = xl_unicode_8_to_32(n->name + i, &icp);
+									strcpy(s, node + 1);
+									s[strlen(s) - 1] = 0;
+								} else {
+									n->type = XL_NODE_NODE;
 
-									if(icp == 0) break;
+									strcpy(s, node);
+								}
+								if(n->type == XL_NODE_PROCESS && nest_level == 0) {
+									free(n);
+									n = NULL;
+								} else {
+									n->name		   = malloc(strlen(s) + 1);
+									n->text		   = NULL;
+									n->first_attribute = NULL;
 
-									if(XL_SKIPPABLE(icp)) {
-										n->name[i] = 0;
-										break;
+									strcpy(n->name, s);
+									i = 0;
+									while(1) {
+										int icp;
+										int nb = xl_unicode_8_to_32(n->name + i, &icp);
+
+										if(icp == 0) break;
+
+										if(XL_SKIPPABLE(icp)) {
+											n->name[i] = 0;
+											set	   = 1;
+										} else if(set) {
+											n->first_attribute = xl_parse_attribute(s + i);
+
+											break;
+										}
+
+										i += nb;
 									}
 
-									i += nb;
-								}
+									if(n->type == XL_NODE_NODE && node[strlen(node) - 1] != '/') {
+										/* non self-closing tag */
+										targ = n;
+										nest_level++;
 
-								if(node[strlen(node) - 1] != '/') {
-									/* non self-closing tag */
-									targ = n;
-									nest_level++;
+										proc = 1;
+									}
 								}
+								free(s);
 							}
 
-							if(nest_level < 0) ERROR;
-							if(nest_level == 0) break;
+							if(proc) {
+								if(nest_level < 0) ERROR;
+								if(nest_level == 0) break;
+							}
 						}
 
 						if(n != NULL) {
@@ -292,11 +398,19 @@ int xl_parse(xmllib_t* handle) {
 }
 
 void recursive_free(xl_node_t* node) {
-	xl_node_t* n = node->first_child;
+	xl_node_t*	n = node->first_child;
+	xl_attribute_t* a = node->first_attribute;
 	while(n != NULL) {
 		recursive_free(n);
 
 		n = n->next;
+	}
+
+	while(a != NULL) {
+		free(a->key);
+		if(a->value != NULL) free(a->value);
+
+		a = a->next;
 	}
 
 	if(node->name != NULL) free(node->name);
