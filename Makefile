@@ -10,19 +10,19 @@ SO = .so
 .PHONY: all format clean
 .SUFFIXES: .c .o
 
-all: libxemil$(SO)
+all: src/libxemil$(SO)
 
 format:
 	clang-format --verbose -i `find src include -name "*.c" -or -name "*.h"` example.c
 
-example: example.c libxemil$(SO)
-	$(CC) -o $@ example.c -I include -Wl,-R. -L. -lxemil
+example: example.c src/libxemil$(SO)
+	$(CC) -o $@ example.c -I include -Wl,-R./src -L./src -lxemil
 
-libxemil$(SO): $(OBJS)
+src/libxemil$(SO): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f src/*.o *.so *.dll example
+	rm -f src/*.o src/*.so src/*.dll example

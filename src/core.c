@@ -26,7 +26,9 @@ enum STATES {
 };
 
 #define TAKE_AS_NODE(x) \
-	{ \
+	if(node == NULL) { \
+		ERROR; \
+	} else { \
 		char* old = node; \
 		char  buf[4]; \
 		int new = xl_unicode_32_to_8((x), &buf[0]); \
@@ -72,7 +74,7 @@ static xl_attribute_t* xl_parse_attribute(const char* str) {
 		int new = xl_unicode_8_to_32(s + i, &cp);
 
 		if(st == 0 && XL_SKIPPABLE(cp)) {
-		} else if(st == 0) {
+		} else if(st == 0 && cp != 0) {
 			xl_attribute_t* old = current;
 
 			st    = 1;
@@ -263,6 +265,12 @@ int xl_parse(xemil_t* handle) {
 									free(n);
 									n = NULL;
 								} else {
+									int sl = node[strlen(s) - 1] == '/' ? 1 : 0;
+
+									if(sl) {
+										s[strlen(s) - 1] = 0;
+									}
+
 									n->name		   = malloc(strlen(s) + 1);
 									n->text		   = NULL;
 									n->first_attribute = NULL;
@@ -287,7 +295,7 @@ int xl_parse(xemil_t* handle) {
 										i += nb;
 									}
 
-									if(n->type == XL_NODE_NODE && node[strlen(node) - 1] != '/') {
+									if(n->type == XL_NODE_NODE && !sl) {
 										/* non self-closing tag */
 										targ = n;
 										nest_level++;
@@ -350,6 +358,7 @@ int xl_parse(xemil_t* handle) {
 			} else if(STATE == STATE_STRING) {
 				xl_array_pop(&state);
 			}
+
 			TAKE_AS_NODE(cp);
 		} else if(STATE == STATE_TAG || STATE == STATE_STRING || STATE == STATE_SPECIAL || STATE == STATE_COMMENT || STATE == STATE_MISC || STATE == STATE_IGNORE_TAG) {
 			if(node_count == 0 && cp == '!') {
