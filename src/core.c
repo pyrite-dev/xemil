@@ -234,13 +234,15 @@ int xl_parse(xemil_t* handle) {
 
 								nest_level--;
 
-								str = xl_util_trim(current->text);
-								free(current->text);
-								current->text = str;
-
-								if(strlen(current->text) == 0) {
+								if(current->text != NULL){
+									str = xl_util_trim(current->text);
 									free(current->text);
-									current->text = NULL;
+									current->text = str;
+
+									if(strlen(current->text) == 0) {
+										free(current->text);
+										current->text = NULL;
+									}
 								}
 
 								proc = 1;
