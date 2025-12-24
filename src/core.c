@@ -234,7 +234,7 @@ int xl_parse(xemil_t* handle) {
 
 								nest_level--;
 
-								if(current->text != NULL){
+								if(current->text != NULL) {
 									str = xl_util_trim(current->text);
 									free(current->text);
 									current->text = str;
