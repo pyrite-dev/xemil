@@ -43,13 +43,22 @@ void recursive(xl_node_t* node, int indent) {
 }
 
 int main(int argc, char** argv) {
-	int i;
+	int	   i;
+	xl_node_t* n;
 
 	for(i = 1; i < argc; i++) {
 		xemil_t* h = xl_open_file(argv[i]);
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {
+				n = h->pre;
+				if(n != NULL) {
+					while(n != NULL) {
+						recursive(n, INDENT);
+						n = n->next;
+					}
+				}
+
 				if(h->root != NULL) recursive(h->root, INDENT);
 			} else {
 				int j;

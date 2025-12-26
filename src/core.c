@@ -7,6 +7,9 @@ xemil_t* xl_open(xl_driver_t* driver, void* arg) {
 	handle->driver	= driver;
 	handle->drv_arg = arg;
 
+	handle->pre  = NULL;
+	handle->root = NULL;
+
 	if(!handle->driver->open(handle)) {
 		free(handle);
 		return NULL;
@@ -189,7 +192,7 @@ int xl_parse(xemil_t* handle) {
 							if(strlen(node) > 2 && node[1] == '-') {
 								/* comment */
 
-								if(strlen(node) > (1 + 3 + 2) && nest_level > 0) {
+								if(strlen(node) > (1 + 3 + 2)) {
 									n = malloc(sizeof(*n));
 
 									n->type		   = XL_NODE_COMMENT;
@@ -250,6 +253,7 @@ int xl_parse(xemil_t* handle) {
 								int   i;
 								int   set = 0;
 								char* s	  = malloc(strlen(node) + 1);
+								int   sl;
 
 								n = malloc(sizeof(*n));
 
@@ -263,47 +267,43 @@ int xl_parse(xemil_t* handle) {
 
 									strcpy(s, node);
 								}
-								if(n->type == XL_NODE_PROCESS && nest_level == 0) {
-									free(n);
-									n = NULL;
-								} else {
-									int sl = node[strlen(s) - 1] == '/' ? 1 : 0;
 
-									if(sl) {
-										s[strlen(s) - 1] = 0;
+								sl = node[strlen(s) - 1] == '/' ? 1 : 0;
+
+								if(sl) {
+									s[strlen(s) - 1] = 0;
+								}
+
+								n->name		   = malloc(strlen(s) + 1);
+								n->text		   = NULL;
+								n->first_attribute = NULL;
+
+								strcpy(n->name, s);
+								i = 0;
+								while(1) {
+									int icp;
+									int nb = xl_unicode_8_to_32(n->name + i, &icp);
+
+									if(icp == 0) break;
+
+									if(XL_SKIPPABLE(icp)) {
+										n->name[i] = 0;
+										set	   = 1;
+									} else if(set) {
+										n->first_attribute = xl_parse_attribute(s + i);
+
+										break;
 									}
 
-									n->name		   = malloc(strlen(s) + 1);
-									n->text		   = NULL;
-									n->first_attribute = NULL;
+									i += nb;
+								}
 
-									strcpy(n->name, s);
-									i = 0;
-									while(1) {
-										int icp;
-										int nb = xl_unicode_8_to_32(n->name + i, &icp);
+								if(n->type == XL_NODE_NODE && !sl) {
+									/* non self-closing tag */
+									targ = n;
+									nest_level++;
 
-										if(icp == 0) break;
-
-										if(XL_SKIPPABLE(icp)) {
-											n->name[i] = 0;
-											set	   = 1;
-										} else if(set) {
-											n->first_attribute = xl_parse_attribute(s + i);
-
-											break;
-										}
-
-										i += nb;
-									}
-
-									if(n->type == XL_NODE_NODE && !sl) {
-										/* non self-closing tag */
-										targ = n;
-										nest_level++;
-
-										proc = 1;
-									}
+									proc = 1;
 								}
 								free(s);
 							}
@@ -315,29 +315,40 @@ int xl_parse(xemil_t* handle) {
 						}
 
 						if(n != NULL) {
-							xl_node_t* last = NULL;
+							if(nest_level == 0 && (n->type == XL_NODE_COMMENT || n->type == XL_NODE_PROCESS)) {
+								if(handle->pre == NULL) {
+									handle->pre = n;
+								} else {
+									xl_node_t* last = handle->pre;
+									while(last->next != NULL) last = last->next;
 
-							if(handle->root == NULL) handle->root = n;
+									n->prev	   = last;
+									last->next = n;
+								}
+							} else {
+								xl_node_t* last = NULL;
+								if(handle->root == NULL) handle->root = n;
 
-							n->root	  = handle->root;
-							n->parent = current;
+								n->root	  = handle->root;
+								n->parent = current;
 
-							n->first_child = NULL;
+								n->first_child = NULL;
 
-							if(current != NULL && current->first_child != NULL) {
-								last = current->first_child;
-								while(last->next != NULL) last = last->next;
-							}
+								if(current != NULL && current->first_child != NULL) {
+									last = current->first_child;
+									while(last->next != NULL) last = last->next;
+								}
 
-							n->prev = last;
-							n->next = NULL;
+								n->prev = last;
+								n->next = NULL;
 
-							if(n->prev != NULL) {
-								n->prev->next = n;
-							}
+								if(n->prev != NULL) {
+									n->prev->next = n;
+								}
 
-							if(current != NULL && current->first_child == NULL) {
-								current->first_child = n;
+								if(current != NULL && current->first_child == NULL) {
+									current->first_child = n;
+								}
 							}
 						}
 

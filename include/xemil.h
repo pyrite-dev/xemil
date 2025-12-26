@@ -54,6 +54,7 @@ struct xemil {
 	xl_driver_t* driver;
 	void*	     drv_opaque;
 	void*	     drv_arg;
+	xl_node_t*   pre;
 	xl_node_t*   root;
 };
 
