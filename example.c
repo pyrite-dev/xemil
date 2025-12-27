@@ -21,7 +21,7 @@ void recursive(xl_node_t* node, int indent) {
 			a = a->next;
 		}
 
-		printf("%s>\n", node->type == XL_NODE_PROCESS ? "?" : "");
+		printf("%s%s>\n", node->type == XL_NODE_PROCESS ? "?" : "", (node->first_child == NULL && node->text == NULL) ? " /" : "");
 		if(node->text != NULL) {
 			for(i = 0; i < indent + INDENT; i++) printf(" ");
 			printf("%s\n", node->text);
@@ -36,7 +36,7 @@ void recursive(xl_node_t* node, int indent) {
 		n = n->next;
 	}
 
-	if(node->name != NULL && node->type == XL_NODE_NODE) {
+	if(node->name != NULL && node->type == XL_NODE_NODE && !(node->first_child == NULL && node->text == NULL)) {
 		for(i = 0; i < indent; i++) printf(" ");
 		printf("</%s>\n", node->name);
 	}
