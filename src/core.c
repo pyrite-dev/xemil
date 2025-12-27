@@ -318,11 +318,14 @@ int xl_parse(xemil_t* handle) {
 							if(nest_level == 0 && (n->type == XL_NODE_COMMENT || n->type == XL_NODE_PROCESS)) {
 								if(handle->pre == NULL) {
 									handle->pre = n;
+
+									n->next = NULL;
 								} else {
 									xl_node_t* last = handle->pre;
 									while(last->next != NULL) last = last->next;
 
 									n->prev	   = last;
+									n->next = NULL;
 									last->next = n;
 								}
 							} else {
