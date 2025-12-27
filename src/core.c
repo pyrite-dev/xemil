@@ -325,7 +325,7 @@ int xl_parse(xemil_t* handle) {
 									while(last->next != NULL) last = last->next;
 
 									n->prev	   = last;
-									n->next = NULL;
+									n->next	   = NULL;
 									last->next = n;
 								}
 							} else {
