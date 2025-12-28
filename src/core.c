@@ -420,7 +420,7 @@ int xl_parse(xemil_t* handle) {
 	return 1;
 }
 
-void recursive_free(xl_node_t* node) {
+static void recursive_free(xl_node_t* node) {
 	xl_node_t*	n = node->first_child;
 	xl_attribute_t* a = node->first_attribute;
 	while(n != NULL) {
