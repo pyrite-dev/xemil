@@ -328,6 +328,7 @@ int xl_parse(xemil_t* handle) {
 									n->next	   = NULL;
 									last->next = n;
 								}
+								n->first_child = NULL;
 							} else {
 								xl_node_t* last = NULL;
 								if(handle->root == NULL) handle->root = n;
