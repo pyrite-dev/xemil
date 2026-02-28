@@ -10,6 +10,8 @@ xemil_t* xl_open(xl_driver_t* driver, void* arg) {
 	handle->pre  = NULL;
 	handle->root = NULL;
 
+	handle->new_text = 0;
+
 	if(!handle->driver->open(handle)) {
 		free(handle);
 		return NULL;
