@@ -569,3 +569,15 @@ void xl_close(xemil_t* handle) {
 	handle->driver->close(handle);
 	free(handle);
 }
+
+char* xl_get_attribute(xl_node_t* node, const char* key){
+	xl_attribute_t* attr = node->first_attribute;
+
+	while(attr != NULL){
+		if(strcmp(attr->key, key) == 0) return attr->value;
+
+		attr = attr->next;
+	}
+
+	return NULL;
+}

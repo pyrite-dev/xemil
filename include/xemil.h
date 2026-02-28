@@ -71,6 +71,8 @@ XLDECL int xl_parse(xemil_t* handle);
 
 XLDECL void xl_close(xemil_t* handle);
 
+XLDECL char* xl_get_attribute(xl_node_t* node, const char* key);
+
 /* file.c */
 XLDECL xl_driver_t* xl_driver_file;
 
