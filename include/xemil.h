@@ -24,7 +24,8 @@ struct xl_driver {
 enum XL_NODE_TYPE {
 	XL_NODE_COMMENT = 0,
 	XL_NODE_NODE,
-	XL_NODE_PROCESS
+	XL_NODE_PROCESS,
+	XL_NODE_TEXT
 };
 
 struct xl_attribute {
@@ -54,6 +55,7 @@ struct xemil {
 	xl_driver_t* driver;
 	void*	     drv_opaque;
 	void*	     drv_arg;
+	int new_text;
 	xl_node_t*   pre;
 	xl_node_t*   root;
 };

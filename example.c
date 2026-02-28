@@ -2,7 +2,7 @@
 
 #define INDENT 2
 
-void recursive(xl_node_t* node, int indent) {
+void recursive(xemil_t* handle, xl_node_t* node, int indent) {
 	int	   i;
 	xl_node_t* n;
 	for(i = 0; i < indent; i++) printf(" ");
@@ -22,21 +22,23 @@ void recursive(xl_node_t* node, int indent) {
 		}
 
 		printf("%s%s>\n", node->type == XL_NODE_PROCESS ? "?" : "", (node->first_child == NULL && node->text == NULL) ? " /" : "");
-		if(node->text != NULL) {
+		if(node->text != NULL && !handle->new_text) {
 			for(i = 0; i < indent + INDENT; i++) printf(" ");
 			printf("%s\n", node->text);
 		}
 	} else if(node->text != NULL && node->type == XL_NODE_COMMENT) {
 		printf("<!--%s-->\n", node->text);
+	} else if(node->text != NULL && node->type == XL_NODE_TEXT) {
+		printf("%s\n", node->text);
 	}
 
 	n = node->first_child;
 	while(n != NULL) {
-		recursive(n, indent + INDENT);
+		recursive(handle, n, indent + INDENT);
 		n = n->next;
 	}
 
-	if(node->name != NULL && node->type == XL_NODE_NODE && !(node->first_child == NULL && node->text == NULL)) {
+	if(node->name != NULL && node->type == XL_NODE_NODE && !(node->first_child == NULL && node->text == NULL && !handle->new_text)) {
 		for(i = 0; i < indent; i++) printf(" ");
 		printf("</%s>\n", node->name);
 	}
@@ -48,18 +50,19 @@ int main(int argc, char** argv) {
 
 	for(i = 1; i < argc; i++) {
 		xemil_t* h = xl_open_file(argv[i]);
+		h->new_text = 1;
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {
 				n = h->pre;
 				if(n != NULL) {
 					while(n != NULL) {
-						recursive(n, INDENT);
+						recursive(h, n, INDENT);
 						n = n->next;
 					}
 				}
 
-				if(h->root != NULL) recursive(h->root, INDENT);
+				if(h->root != NULL) recursive(h, h->root, INDENT);
 			} else {
 				int j;
 				for(j = 0; j < INDENT; j++) printf(" ");
