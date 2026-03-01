@@ -81,6 +81,8 @@ XLDECL xemil_t* xl_open_file(const char* filename);
 /* util.c */
 XLDECL char* xl_util_trim(const char* str);
 
+XLDECL char* xl_util_strdup(const char* str);
+
 /* unicode.c */
 XLDECL int xl_unicode_count(unsigned char c);
 

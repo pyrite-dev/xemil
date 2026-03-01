@@ -74,3 +74,11 @@ char* xl_util_trim(const char* str) {
 
 	return s;
 }
+
+char* xl_util_strdup(const char* str){
+	char* s = malloc(strlen(str) + 1);
+
+	strcpy(s, str);
+
+	return s;
+}

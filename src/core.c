@@ -293,6 +293,8 @@ int xl_parse(xemil_t* handle) {
 												n->text = str;
 
 												if(strlen(n->text) == 0) {
+													xl_node_t* o = n;
+
 													free(n->text);
 													n->text = NULL;
 
@@ -300,9 +302,9 @@ int xl_parse(xemil_t* handle) {
 													if(n->next != NULL) n->next->prev = n->prev;
 
 													n = n->next;
-													if(n != NULL) free(n->prev);
+													free(o);
 
-													if(n->prev == NULL) n->parent->first_child = n;
+													if(n != NULL && n->prev == NULL && n->parent != NULL) n->parent->first_child = n;
 
 													continue;
 												}
@@ -480,6 +482,8 @@ int xl_parse(xemil_t* handle) {
 
 						if(last->type == XL_NODE_TEXT){
 							old = last->text;
+						}else{
+							last = NULL;
 						}
 					}
 				}else{
