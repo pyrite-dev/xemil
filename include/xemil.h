@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
+#include <stdarg.h>
 
 #define XLDECL extern
 
@@ -55,7 +56,7 @@ struct xemil {
 	xl_driver_t* driver;
 	void*	     drv_opaque;
 	void*	     drv_arg;
-	int new_text;
+	int	     new_text;
 	xl_node_t*   pre;
 	xl_node_t*   root;
 };
@@ -66,12 +67,9 @@ extern "C" {
 
 /* core.c */
 XLDECL xemil_t* xl_open(xl_driver_t* driver, void* arg);
-
-XLDECL int xl_parse(xemil_t* handle);
-
-XLDECL void xl_close(xemil_t* handle);
-
-XLDECL char* xl_get_attribute(xl_node_t* node, const char* key);
+XLDECL int	xl_parse(xemil_t* handle);
+XLDECL void	xl_close(xemil_t* handle);
+XLDECL char*	xl_get_attribute(xl_node_t* node, const char* key);
 
 /* file.c */
 XLDECL xl_driver_t* xl_driver_file;
@@ -80,23 +78,18 @@ XLDECL xemil_t* xl_open_file(const char* filename);
 
 /* util.c */
 XLDECL char* xl_util_trim(const char* str);
-
 XLDECL char* xl_util_strdup(const char* str);
+XLDECL char* xl_util_strvacat(const char* str, ...);
 
 /* unicode.c */
 XLDECL int xl_unicode_count(unsigned char c);
-
 XLDECL int xl_unicode_8_to_32(const char* input, int* output);
-
 XLDECL int xl_unicode_32_to_8(const int input, char* output);
 
 /* array.c */
 XLDECL void xl_array_push(int** array, int value);
-
-XLDECL int xl_array_length(int** array);
-
+XLDECL int  xl_array_length(int** array);
 XLDECL void xl_array_pop(int** array);
-
 XLDECL void xl_array_free(int** array);
 
 #ifdef __cplusplus

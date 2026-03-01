@@ -206,22 +206,22 @@ int xl_parse(xemil_t* handle) {
 									n->text[strlen(n->text) - 2] = 0;
 								}
 							} else if(strlen(node) > 8 && memcmp(&node[1], "[CDATA[", 7) == 0 && node[strlen(node) - 1] == ']' && node[strlen(node) - 2] == ']') {
-								char* old;
-								char* text;
+								char*	   old;
+								char*	   text;
 								xl_node_t* last;
 
-								if(handle->new_text){
+								if(handle->new_text) {
 									old = NULL;
-				
+
 									last = current->first_child;
-									if(last != NULL){
+									if(last != NULL) {
 										while(last->next != NULL) last = last->next;
-				
-										if(last->type == XL_NODE_TEXT){
+
+										if(last->type == XL_NODE_TEXT) {
 											old = last->text;
 										}
 									}
-								}else{
+								} else {
 									old = current->text;
 								}
 
@@ -238,30 +238,33 @@ int xl_parse(xemil_t* handle) {
 									text[strlen(text) - 2] = 0;
 								}
 
-								if(handle->new_text){
-									if(last == NULL){
+								if(handle->new_text) {
+									if(last == NULL) {
 										xl_node_t* n;
-				
+
 										last = malloc(sizeof(*last));
-				
+
 										memset(last, 0, sizeof(*last));
-				
-										last->type = XL_NODE_TEXT;
+
+										last->type   = XL_NODE_TEXT;
 										last->parent = current;
-				
+
 										n = current->first_child;
-										if(n == NULL){
+										if(n == NULL) {
 											current->first_child = last;
-										}else{
+										} else {
 											while(n->next != NULL) n = n->next;
-				
-											n->next = last;
+
+											n->next	   = last;
 											last->prev = n;
 										}
 									}
-				
+
 									last->text = text;
-								}else{
+
+									if(current->text != NULL) free(current->text);
+									current->text = xl_util_strdup(text);
+								} else {
 									current->text = text;
 								}
 							} else {
@@ -283,11 +286,15 @@ int xl_parse(xemil_t* handle) {
 
 								nest_level--;
 
-								if(handle->new_text){
+								if(handle->new_text) {
 									xl_node_t* n = current->first_child;
-									while(n != NULL){
-										if(n->type == XL_NODE_TEXT){
-											if(n->text != NULL){
+
+									if(current->text != NULL) free(current->text);
+									current->text = NULL;
+
+									while(n != NULL) {
+										if(n->type == XL_NODE_TEXT) {
+											if(n->text != NULL) {
 												str = xl_util_trim(n->text);
 												free(n->text);
 												n->text = str;
@@ -307,13 +314,21 @@ int xl_parse(xemil_t* handle) {
 													if(n != NULL && n->prev == NULL && n->parent != NULL) n->parent->first_child = n;
 
 													continue;
+												} else {
+													char* old = current->text;
+													if(old == NULL) {
+														current->text = xl_util_strdup(n->text);
+													} else {
+														current->text = xl_util_strvacat(old, "\n", n->text, NULL);
+														free(old);
+													}
 												}
 											}
 										}
 
 										n = n->next;
 									}
-								}else{
+								} else {
 									if(current->text != NULL) {
 										str = xl_util_trim(current->text);
 										free(current->text);
@@ -469,24 +484,24 @@ int xl_parse(xemil_t* handle) {
 			TAKE_AS_NODE(cp);
 		} else if(STATE == STATE_INITIAL) {
 			if(current != NULL) {
-				char* text;
-				char* old;
+				char*	   text;
+				char*	   old;
 				xl_node_t* last;
 
-				if(handle->new_text){
+				if(handle->new_text) {
 					old = NULL;
 
 					last = current->first_child;
-					if(last != NULL){
+					if(last != NULL) {
 						while(last->next != NULL) last = last->next;
 
-						if(last->type == XL_NODE_TEXT){
+						if(last->type == XL_NODE_TEXT) {
 							old = last->text;
-						}else{
+						} else {
 							last = NULL;
 						}
 					}
-				}else{
+				} else {
 					old = current->text;
 				}
 
@@ -509,30 +524,30 @@ int xl_parse(xemil_t* handle) {
 					text[new] = 0;
 				}
 
-				if(handle->new_text){
-					if(last == NULL){
+				if(handle->new_text) {
+					if(last == NULL) {
 						xl_node_t* n;
 
 						last = malloc(sizeof(*last));
 
 						memset(last, 0, sizeof(*last));
 
-						last->type = XL_NODE_TEXT;
+						last->type   = XL_NODE_TEXT;
 						last->parent = current;
 
 						n = current->first_child;
-						if(n == NULL){
+						if(n == NULL) {
 							current->first_child = last;
-						}else{
+						} else {
 							while(n->next != NULL) n = n->next;
 
-							n->next = last;
+							n->next	   = last;
 							last->prev = n;
 						}
 					}
 
 					last->text = text;
-				}else{
+				} else {
 					current->text = text;
 				}
 			}
@@ -574,10 +589,10 @@ void xl_close(xemil_t* handle) {
 	free(handle);
 }
 
-char* xl_get_attribute(xl_node_t* node, const char* key){
+char* xl_get_attribute(xl_node_t* node, const char* key) {
 	xl_attribute_t* attr = node->first_attribute;
 
-	while(attr != NULL){
+	while(attr != NULL) {
 		if(strcmp(attr->key, key) == 0) return attr->value;
 
 		attr = attr->next;
