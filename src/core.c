@@ -600,3 +600,86 @@ char* xl_get_attribute(xl_node_t* node, const char* key) {
 
 	return NULL;
 }
+
+xl_node_t** xl_get_nodes(xl_node_t* node, const char* name){
+	xl_node_t* child;
+	int i, len = 0;
+	xl_node_t** matches;
+
+	child = node->first_child;
+	while(child != NULL){
+		if(child->type == XL_NODE_NODE && child->name != NULL && strcmp(child->name, name) == 0){
+			len++;
+		}
+
+		child = child->next;
+	}
+
+	if(len == 0) return NULL;
+
+	matches = malloc(sizeof(*matches) * (len + 1));
+	matches[len] = NULL;
+
+	child = node->first_child;
+	while(child != NULL){
+		if(child->type == XL_NODE_NODE && child->name != NULL && strcmp(child->name, name) == 0){
+			matches[i++] = child;
+		}
+
+		child = child->next;
+	}
+
+	return matches;
+}
+
+xl_node_t** xl_get_path(xl_node_t* node, const char* path){
+	xl_node_t** r = malloc(sizeof(*r) * 2);
+	char* p = xl_util_strdup(path);
+	int i;
+	int s = 0;
+
+	r[0] = node;
+	r[1] = NULL;
+
+	for(i = 0;; i++){
+		if(p[i] == '.' || p[i] == 0){
+			char old = p[i];
+			int j;
+			xl_node_t** new = malloc(sizeof(*new));
+
+			new[0] = NULL;
+
+			p[i] = 0;
+
+			for(j = 0; r[j] != NULL; j++){
+				xl_node_t** nodes = xl_get_nodes(r[j], p + s);
+				if(nodes != NULL){
+					xl_node_t** old = new;
+					int k, l;
+					int len = 0;
+
+					for(k = 0; old[k] != NULL; k++) len++;
+					for(k = 0; nodes[k] != NULL; k++) len++;
+
+					new = malloc(sizeof(*new) * (len + 1));
+					new[len] = NULL;
+
+					for(k = 0; old[k] != NULL; k++) new[k] = old[k];
+					for(l = 0; nodes[l] != NULL; l++) new[k + l] = nodes[l];
+
+					free(old);
+
+					free(nodes);
+				}
+			}
+			free(r);
+			r = new;
+
+			s = i + 1;
+
+			if(old == 0) break;
+		}
+	}
+
+	return r;
+}

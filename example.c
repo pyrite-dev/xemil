@@ -57,12 +57,17 @@ int main(int argc, char** argv) {
 				n = h->pre;
 				if(n != NULL) {
 					while(n != NULL) {
-						recursive(h, n, INDENT);
+//						recursive(h, n, INDENT);
 						n = n->next;
 					}
 				}
 
-				if(h->root != NULL) recursive(h, h->root, INDENT);
+//				if(h->root != NULL) recursive(h, h->root, INDENT);
+
+				xl_node_t** r = xl_get_path(h->root, "book.title");
+				int j;
+				for(j = 0; r[j] != NULL; j++) recursive(h, r[j], INDENT);
+				free(r);
 			} else {
 				int j;
 				for(j = 0; j < INDENT; j++) printf(" ");
