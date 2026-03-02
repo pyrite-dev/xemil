@@ -680,6 +680,11 @@ xl_node_t** xl_get_path(xl_node_t* node, const char* path){
 			if(old == 0) break;
 		}
 	}
+	
+	if(r[0] == NULL){
+		free(r);
+		r = NULL;
+	}
 
 	return r;
 }
