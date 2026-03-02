@@ -621,6 +621,7 @@ xl_node_t** xl_get_nodes(xl_node_t* node, const char* name){
 	matches[len] = NULL;
 
 	child = node->first_child;
+	i = 0;
 	while(child != NULL){
 		if(child->type == XL_NODE_NODE && child->name != NULL && strcmp(child->name, name) == 0){
 			matches[i++] = child;
