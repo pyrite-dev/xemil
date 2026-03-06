@@ -72,7 +72,7 @@ XLDECL void	xl_close(xemil_t* handle);
 XLDECL char*	xl_get_attribute(xl_node_t* node, const char* key);
 
 XLDECL xl_node_t** xl_get_nodes(xl_node_t* node, const char* name); /* NULL-terminated */
-XLDECL xl_node_t** xl_get_path(xl_node_t* node, const char* path); /* NULL-terminated */
+XLDECL xl_node_t** xl_get_path(xl_node_t* node, const char* path);  /* NULL-terminated */
 
 /* file.c */
 XLDECL xl_driver_t* xl_driver_file;
