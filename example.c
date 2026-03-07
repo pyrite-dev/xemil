@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {
+				xl_node_t** r;
+
 				n = h->pre;
 				if(n != NULL) {
 					while(n != NULL) {
@@ -62,12 +64,20 @@ int main(int argc, char** argv) {
 					}
 				}
 
-				//				if(h->root != NULL) recursive(h, h->root, INDENT);
+				/* f(h->root != NULL) recursive(h, h->root, INDENT); */
 
-				xl_node_t** r = xl_get_path(h->root, "book.title");
-				int	    j;
-				for(j = 0; r[j] != NULL; j++) recursive(h, r[j], INDENT);
-				free(r);
+				r = xl_get_path(h->root, "book.title");
+
+				/* check if book.title dosent exist to prevent SEGFAULT */
+				if(r != NULL) {
+					int j;
+					for(j = 0; r[j] != NULL; j++) {
+						recursive(h, r[j], INDENT);
+					}
+					free(r);
+				} else {
+					printf("book.title not found in %s\n", argv[i]);
+				}
 			} else {
 				int j;
 				for(j = 0; j < INDENT; j++) printf(" ");
@@ -76,4 +86,4 @@ int main(int argc, char** argv) {
 			xl_close(h);
 		}
 	}
-}
+\}
