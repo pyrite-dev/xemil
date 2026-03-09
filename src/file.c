@@ -1,7 +1,18 @@
 #include <xemil.h>
 
 static int xl_driver_file_open(xemil_t* handle) {
+	char* s;
+
 	if((handle->drv_opaque = fopen(handle->drv_arg, "rb")) == NULL) return 0;
+
+	handle->path = xl_util_strdup(handle->drv_arg);
+
+	if((s = strrchr(handle->path, '/')) == NULL) {
+		free(handle->path);
+		handle->path = xl_util_strdup("./");
+	} else {
+		s[1] = 0;
+	}
 
 	return 1;
 }

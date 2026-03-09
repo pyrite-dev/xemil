@@ -10,7 +10,10 @@ xemil_t* xl_open(xl_driver_t* driver, void* arg) {
 	handle->pre  = NULL;
 	handle->root = NULL;
 
-	handle->new_text = 0;
+	handle->path = NULL;
+
+	handle->new_text    = 0;
+	handle->do_xinclude = 0;
 
 	if(!handle->driver->open(handle)) {
 		free(handle);
@@ -560,6 +563,10 @@ int xl_parse(xemil_t* handle) {
 
 	CLEANUP;
 
+	if(handle->do_xinclude) {
+		xl_xinclude_scan(handle, handle->root);
+	}
+
 	return 1;
 }
 
@@ -589,8 +596,82 @@ static void recursive_free(xl_node_t* node) {
 	free(node);
 }
 
+void xl_free(xl_node_t* node) {
+	xl_node_t* parent = node->parent;
+	xl_node_t* child;
+
+	child = parent->first_child;
+	if(child != NULL && child == node) {
+		parent->first_child = child->next;
+		if(child->next != NULL) child->next->prev = NULL;
+		child = child->next;
+	}
+
+	while(child != NULL) {
+		xl_node_t* next = child->next;
+
+		if(child == node) {
+			if(child->prev != NULL) child->prev->next = child->next;
+			if(child->next != NULL) child->next->prev = child->prev;
+		}
+
+		child = next;
+	}
+
+	recursive_free(node);
+}
+
+void xl_replace(xl_node_t* node, xl_node_t* new) {
+	xl_node_t* parent = node->parent;
+	xl_node_t* child;
+
+	if(new->parent != NULL&& new->parent->first_child == new) {
+		new->parent->first_child = new->next;
+		if(new->next->prev != NULL) new->next->prev = NULL;
+	}
+	if(new->parent != NULL) {
+		child = new->parent->first_child;
+
+		while(child != NULL) {
+			if(child == new) {
+				if(child->prev != NULL) child->prev->next = child->next;
+				if(child->next != NULL) child->next->prev = child->prev;
+			}
+
+			child = child->next;
+		}
+	}
+
+	child = parent->first_child;
+	if(child != NULL && child == node) {
+		parent->first_child = new;
+
+		new->parent = parent;
+		new->prev   = NULL;
+		new->next   = child->next;
+
+		child = child->next;
+	}
+
+	while(child != NULL) {
+		if(child == node) {
+			new->parent = parent;
+			new->next   = child->next;
+			new->prev   = child->prev;
+
+			if(child->prev != NULL) child->prev->next = new;
+			if(child->next != NULL) child->next->prev = new;
+		}
+
+		child = child->next;
+	}
+
+	recursive_free(node);
+}
+
 void xl_close(xemil_t* handle) {
 	if(handle->root != NULL) recursive_free(handle->root);
+	if(handle->path != NULL) free(handle->path);
 
 	handle->driver->close(handle);
 	free(handle);

@@ -49,8 +49,9 @@ int main(int argc, char** argv) {
 	xl_node_t* n;
 
 	for(i = 1; i < argc; i++) {
-		xemil_t* h  = xl_open_file(argv[i]);
-		h->new_text = 1;
+		xemil_t* h     = xl_open_file(argv[i]);
+		h->new_text    = 1;
+		h->do_xinclude = 1;
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {

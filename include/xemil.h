@@ -58,6 +58,8 @@ struct xemil {
 	void*	     drv_opaque;
 	void*	     drv_arg;
 	int	     new_text;
+	int	     do_xinclude;
+	char*	     path;
 	xl_node_t*   pre;
 	xl_node_t*   root;
 };
@@ -66,6 +68,7 @@ struct xemil {
 extern "C" {
 #endif
 
+/* clang-format off */
 #define XL_MERGE(target, source) \
 	{ \
 		xl_node_t** target##_old = target; \
@@ -109,19 +112,19 @@ extern "C" {
 				xl_node_t*  scanned_node = r[j];
 
 #define XL_LIST_END \
-	if(nodes != NULL) { \
-		XL_MERGE(new, nodes); \
+				if(nodes != NULL) { \
+					XL_MERGE(new, nodes); \
 \
-		free(nodes); \
-	} \
-	} \
-	free(r); \
-	r = new; \
+					free(nodes); \
+				} \
+			} \
+			free(r); \
+			r = new; \
 \
-	s = i + 1; \
+			s = i + 1; \
 \
-	if(old == 0) break; \
-	} \
+			if(old == 0) break; \
+		} \
 	} \
 \
 	if(r[0] == NULL) { \
@@ -130,12 +133,15 @@ extern "C" {
 	} \
 \
 	return r;
+/* clang-format on */
 
 /* core.c */
 XLDECL xemil_t* xl_open(xl_driver_t* driver, void* arg);
 XLDECL int	xl_parse(xemil_t* handle);
 XLDECL void	xl_close(xemil_t* handle);
 XLDECL char*	xl_get_attribute(xl_node_t* node, const char* key);
+XLDECL void	xl_free(xl_node_t* node);
+XLDECL void	xl_replace(xl_node_t* node, xl_node_t* new);
 
 XLDECL xl_node_t** xl_get_nodes(xl_node_t* node, const char* name); /* NULL-terminated */
 XLDECL xl_node_t** xl_get_path(xl_node_t* node, const char* path);  /* NULL-terminated */
@@ -164,6 +170,9 @@ XLDECL void xl_array_free(int** array);
 
 /* xpointer.c */
 xl_node_t** xl_xpointer(xl_node_t* node, const char* path);
+
+/* xinclude.c */
+void xl_xinclude_scan(xemil_t* handle, xl_node_t* node);
 
 #ifdef __cplusplus
 }
