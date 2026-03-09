@@ -3,7 +3,7 @@ CFLAGS = -I include -fPIC -g
 LDFLAGS = -shared
 LIBS =
 
-OBJS = src/core.o src/file.o src/unicode.o src/util.o src/array.o
+OBJS = src/core.o src/file.o src/unicode.o src/util.o src/array.o src/xpointer.o
 
 SO = .so
 

@@ -641,58 +641,9 @@ xl_node_t** xl_get_nodes(xl_node_t* node, const char* name) {
 }
 
 xl_node_t** xl_get_path(xl_node_t* node, const char* path) {
-	xl_node_t** r = malloc(sizeof(*r) * 2);
-	char*	    p = xl_util_strdup(path);
-	int	    i;
-	int	    s = 0;
+	XL_LIST_BEGIN('.');
 
-	r[0] = node;
-	r[1] = NULL;
+	nodes = xl_get_nodes(scanned_node, token);
 
-	for(i = 0;; i++) {
-		if(p[i] == '.' || p[i] == 0) {
-			char old = p[i];
-			int  j;
-			xl_node_t** new = malloc(sizeof(*new));
-
-			new[0] = NULL;
-
-			p[i] = 0;
-
-			for(j = 0; r[j] != NULL; j++) {
-				xl_node_t** nodes = xl_get_nodes(r[j], p + s);
-				if(nodes != NULL) {
-					xl_node_t** old = new;
-					int	    k, l;
-					int	    len = 0;
-
-					for(k = 0; old[k] != NULL; k++) len++;
-					for(k = 0; nodes[k] != NULL; k++) len++;
-
-					new	 = malloc(sizeof(*new) * (len + 1));
-					new[len] = NULL;
-
-					for(k = 0; old[k] != NULL; k++) new[k] = old[k];
-					for(l = 0; nodes[l] != NULL; l++) new[k + l] = nodes[l];
-
-					free(old);
-
-					free(nodes);
-				}
-			}
-			free(r);
-			r = new;
-
-			s = i + 1;
-
-			if(old == 0) break;
-		}
-	}
-
-	if(r[0] == NULL) {
-		free(r);
-		r = NULL;
-	}
-
-	return r;
+	XL_LIST_END;
 }

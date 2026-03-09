@@ -103,3 +103,12 @@ char* xl_util_strvacat(const char* str, ...) {
 
 	return r;
 }
+
+int xl_util_is_integer(const char* str) {
+	char* ep;
+
+	strtol(str, &ep, 10);
+	if(ep == str || *ep != 0 || errno) return 0;
+
+	return 1;
+}

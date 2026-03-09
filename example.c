@@ -59,14 +59,14 @@ int main(int argc, char** argv) {
 				n = h->pre;
 				if(n != NULL) {
 					while(n != NULL) {
-						//						recursive(h, n, INDENT);
+						/* recursive(h, n, INDENT); */
 						n = n->next;
 					}
 				}
 
-				/* f(h->root != NULL) recursive(h, h->root, INDENT); */
+				/* if(h->root != NULL) recursive(h, h->root, INDENT); */
 
-				r = xl_get_path(h->root, "book.title");
+				r = xl_xpointer(h->root, "element(/book/title)");
 
 				/* check if book.title dosent exist to prevent SEGFAULT */
 				if(r != NULL) {
