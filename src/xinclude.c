@@ -21,8 +21,7 @@ void xl_xinclude_scan(xemil_t* handle, xl_node_t* node) {
 			if(xpointer == NULL) xpointer = "element(/)";
 
 			if((new = xl_open_file(href)) != NULL) {
-				new->do_xinclude = 1;
-				new->new_text	 = handle->new_text;
+				new->param = handle->param;
 				if(xl_parse(new) && new->root != NULL) {
 					xl_node_t** nodes;
 					if((nodes = xl_xpointer(new->root, xpointer)) != NULL) {

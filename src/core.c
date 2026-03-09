@@ -12,8 +12,8 @@ xemil_t* xl_open(xl_driver_t* driver, void* arg) {
 
 	handle->path = NULL;
 
-	handle->new_text    = 0;
-	handle->do_xinclude = 0;
+	handle->param.new_text	  = 0;
+	handle->param.do_xinclude = 0;
 
 	if(!handle->driver->open(handle)) {
 		free(handle);
@@ -213,7 +213,7 @@ int xl_parse(xemil_t* handle) {
 								char*	   text;
 								xl_node_t* last;
 
-								if(handle->new_text) {
+								if(handle->param.new_text) {
 									old = NULL;
 
 									last = current->first_child;
@@ -241,7 +241,7 @@ int xl_parse(xemil_t* handle) {
 									text[strlen(text) - 2] = 0;
 								}
 
-								if(handle->new_text) {
+								if(handle->param.new_text) {
 									if(last == NULL) {
 										xl_node_t* n;
 
@@ -289,7 +289,7 @@ int xl_parse(xemil_t* handle) {
 
 								nest_level--;
 
-								if(handle->new_text) {
+								if(handle->param.new_text) {
 									xl_node_t* n = current->first_child;
 
 									if(current->text != NULL) free(current->text);
@@ -493,7 +493,7 @@ int xl_parse(xemil_t* handle) {
 				char*	   old;
 				xl_node_t* last;
 
-				if(handle->new_text) {
+				if(handle->param.new_text) {
 					old = NULL;
 
 					last = current->first_child;
@@ -529,7 +529,7 @@ int xl_parse(xemil_t* handle) {
 					text[new] = 0;
 				}
 
-				if(handle->new_text) {
+				if(handle->param.new_text) {
 					if(last == NULL) {
 						xl_node_t* n;
 
@@ -563,7 +563,7 @@ int xl_parse(xemil_t* handle) {
 
 	CLEANUP;
 
-	if(handle->do_xinclude) {
+	if(handle->param.do_xinclude) {
 		xl_xinclude_scan(handle, handle->root);
 	}
 

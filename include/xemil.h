@@ -14,6 +14,7 @@ typedef struct xl_driver    xl_driver_t;
 typedef struct xemil	    xemil_t;
 typedef struct xl_node	    xl_node_t;
 typedef struct xl_attribute xl_attribute_t;
+typedef struct xl_param	    xl_param_t;
 
 #define XL_SKIPPABLE(x) (((x) == ' ') || ((x) == '\t') || ((x) == '\n') || ((x) == '\r'))
 
@@ -53,15 +54,20 @@ struct xl_node {
 	xl_node_t* next;
 };
 
+struct xl_param {
+	int new_text;
+	int do_xinclude;
+};
+
 struct xemil {
 	xl_driver_t* driver;
 	void*	     drv_opaque;
 	void*	     drv_arg;
-	int	     new_text;
-	int	     do_xinclude;
 	char*	     path;
 	xl_node_t*   pre;
 	xl_node_t*   root;
+
+	xl_param_t param;
 };
 
 #ifdef __cplusplus
