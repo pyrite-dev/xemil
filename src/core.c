@@ -203,6 +203,7 @@ int xl_parse(xemil_t* handle) {
 									n->type		   = XL_NODE_COMMENT;
 									n->name		   = NULL;
 									n->text		   = malloc(strlen(node) + 1);
+									n->text_raw	   = NULL;
 									n->first_attribute = NULL;
 
 									strcpy(n->text, node + 3);
@@ -263,7 +264,8 @@ int xl_parse(xemil_t* handle) {
 										}
 									}
 
-									last->text = text;
+									last->text     = text;
+									last->text_raw = NULL;
 
 									if(current->text != NULL) free(current->text);
 									current->text = xl_util_strdup(text);
@@ -298,6 +300,8 @@ int xl_parse(xemil_t* handle) {
 									while(n != NULL) {
 										if(n->type == XL_NODE_TEXT) {
 											if(n->text != NULL) {
+												n->text_raw = xl_util_strdup(n->text);
+
 												str = xl_util_trim(n->text);
 												free(n->text);
 												n->text = str;
@@ -335,6 +339,8 @@ int xl_parse(xemil_t* handle) {
 									}
 								} else {
 									if(current->text != NULL) {
+										current->text_raw = xl_util_strdup(current->text);
+
 										str = xl_util_trim(current->text);
 										free(current->text);
 										current->text = str;
@@ -374,6 +380,7 @@ int xl_parse(xemil_t* handle) {
 
 								n->name		   = malloc(strlen(s) + 1);
 								n->text		   = NULL;
+								n->text_raw	   = NULL;
 								n->first_attribute = NULL;
 
 								strcpy(n->name, s);
@@ -467,7 +474,7 @@ int xl_parse(xemil_t* handle) {
 			} else {
 				ERROR;
 			}
-		} else if(cp == '"' && STATE != STATE_COMMENT && STATE != STATE_MISC) {
+		} else if(cp == '"' && STATE != STATE_INITIAL && STATE != STATE_COMMENT && STATE != STATE_MISC) {
 			if(STATE == STATE_TAG) {
 				xl_array_push(&state, STATE_STRING);
 			} else if(STATE == STATE_STRING) {
@@ -551,7 +558,8 @@ int xl_parse(xemil_t* handle) {
 						}
 					}
 
-					last->text = text;
+					last->text     = text;
+					last->text_raw = NULL;
 				} else {
 					current->text = text;
 				}
@@ -593,6 +601,7 @@ static void recursive_free(xl_node_t* node) {
 
 	if(node->name != NULL) free(node->name);
 	if(node->text != NULL) free(node->text);
+	if(node->text_raw != NULL) free(node->text_raw);
 	free(node);
 }
 

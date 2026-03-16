@@ -43,6 +43,7 @@ struct xl_node {
 	int		type;
 	char*		name;
 	char*		text;
+	char*		text_raw;
 	xl_attribute_t* first_attribute;
 
 	xl_node_t* root;
