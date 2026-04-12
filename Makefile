@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I include -fPIC -g
+CFLAGS = -I include -fPIC
 LDFLAGS = -shared
 LIBS =
 

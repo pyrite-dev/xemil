@@ -22,7 +22,7 @@ void recursive(xemil_t* handle, xl_node_t* node, int indent) {
 		}
 
 		printf("%s%s>\n", node->type == XL_NODE_PROCESS ? "?" : "", (node->first_child == NULL && node->text == NULL) ? " /" : "");
-		if(node->text != NULL && !handle->new_text) {
+		if(node->text != NULL && !handle->param.new_text) {
 			for(i = 0; i < indent + INDENT; i++) printf(" ");
 			printf("%s\n", node->text);
 		}
@@ -38,7 +38,7 @@ void recursive(xemil_t* handle, xl_node_t* node, int indent) {
 		n = n->next;
 	}
 
-	if(node->name != NULL && node->type == XL_NODE_NODE && !(node->first_child == NULL && node->text == NULL && !handle->new_text)) {
+	if(node->name != NULL && node->type == XL_NODE_NODE && !(node->first_child == NULL && node->text == NULL && !handle->param.new_text)) {
 		for(i = 0; i < indent; i++) printf(" ");
 		printf("</%s>\n", node->name);
 	}
@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
 
 	for(i = 1; i < argc; i++) {
 		xemil_t* h     = xl_open_file(argv[i]);
-		h->new_text    = 1;
-		h->do_xinclude = 1;
+		h->param.new_text    = 1;
+		h->param.do_xinclude = 1;
 		if(h != NULL) {
 			printf("%s:\n", argv[i]);
 			if(xl_parse(h)) {
@@ -79,6 +79,8 @@ int main(int argc, char** argv) {
 				} else {
 					printf("book.title not found in %s\n", argv[i]);
 				}
+
+				recursive(h, h->root, 0);
 			} else {
 				int j;
 				for(j = 0; j < INDENT; j++) printf(" ");
