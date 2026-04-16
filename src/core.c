@@ -630,19 +630,19 @@ void xl_free(xl_node_t* node) {
 	recursive_free(node);
 }
 
-void xl_replace(xl_node_t* node, xl_node_t* new) {
+void xl_replace(xl_node_t* node, xl_node_t* new_node) {
 	xl_node_t* parent = node->parent;
 	xl_node_t* child;
 
-	if(new->parent != NULL&& new->parent->first_child == new) {
-		new->parent->first_child = new->next;
-		if(new->next->prev != NULL) new->next->prev = NULL;
+	if(new_node->parent != NULL&& new_node->parent->first_child == new_node) {
+		new_node->parent->first_child = new_node->next;
+		if(new_node->next->prev != NULL) new_node->next->prev = NULL;
 	}
-	if(new->parent != NULL) {
-		child = new->parent->first_child;
+	if(new_node->parent != NULL) {
+		child = new_node->parent->first_child;
 
 		while(child != NULL) {
-			if(child == new) {
+			if(child == new_node) {
 				if(child->prev != NULL) child->prev->next = child->next;
 				if(child->next != NULL) child->next->prev = child->prev;
 			}
@@ -653,23 +653,23 @@ void xl_replace(xl_node_t* node, xl_node_t* new) {
 
 	child = parent->first_child;
 	if(child != NULL && child == node) {
-		parent->first_child = new;
+		parent->first_child = new_node;
 
-		new->parent = parent;
-		new->prev   = NULL;
-		new->next   = child->next;
+		new_node->parent = parent;
+		new_node->prev   = NULL;
+		new_node->next   = child->next;
 
 		child = child->next;
 	}
 
 	while(child != NULL) {
 		if(child == node) {
-			new->parent = parent;
-			new->next   = child->next;
-			new->prev   = child->prev;
+			new_node->parent = parent;
+			new_node->next   = child->next;
+			new_node->prev   = child->prev;
 
-			if(child->prev != NULL) child->prev->next = new;
-			if(child->next != NULL) child->next->prev = new;
+			if(child->prev != NULL) child->prev->next = new_node;
+			if(child->next != NULL) child->next->prev = new_node;
 		}
 
 		child = child->next;
